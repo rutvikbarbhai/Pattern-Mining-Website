@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pattern Miner — Discover Hidden Patterns in Financial Data</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pm-black: #0a0a0a;
+      --pm-white: #fafaf8;
+      --pm-green: #22c55e;
+      --pm-green-dim: #dcfce7;
+      --pm-green-text: #15803d;
+      --pm-red: #ef4444;
+      --pm-red-dim: #fee2e2;
+      --pm-red-text: #b91c1c;
+      --pm-amber: #f59e0b;
+      --pm-amber-dim: #fef3c7;
+      --pm-amber-text: #b45309;
+      --pm-gray-50: #f9f9f7;
+      --pm-gray-100: #f1f0ec;
+      --pm-gray-200: #e4e2db;
+      --pm-gray-400: #a09e97;
+      --pm-gray-600: #5c5a54;
+      --pm-gray-800: #2a2925;
+      --pm-serif: 'DM Serif Display', Georgia, serif;
+      --pm-sans: 'Outfit', system-ui, sans-serif;
+      --pm-mono: 'DM Mono', monospace;
+      --pm-radius: 12px;
+      --pm-radius-sm: 8px;
+      --pm-radius-pill: 999px;
+      --pm-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    html, body {
+      font-family: var(--pm-sans);
+      background: var(--pm-white);
+      color: var(--pm-black);
+      min-height: 100vh;
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── SCREEN SYSTEM ── */
+    .screen { display: none; }
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      animation: fadeUp 0.3s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── NAV ── */
+    .pm-nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+      border-bottom: 0.5px solid var(--pm-gray-200);
+      background: rgba(250,250,248,0.92);
+      backdrop-filter: blur(8px);
+    }
+    .pm-logo {
+      font-family: var(--pm-serif);
+      font-size: 1.15rem;
+      letter-spacing: -0.01em;
+      color: var(--pm-black);
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .pm-logo-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--pm-green);
+      flex-shrink: 0;
+    }
+    .pm-nav-links {
+      display: flex; gap: 1.5rem; align-items: center;
+    }
+    .pm-nav-link {
+      font-size: 0.84rem; color: var(--pm-gray-600);
+      cursor: pointer; border: none; background: none;
+      font-family: var(--pm-sans);
+    }
+    .pm-nav-link:hover { color: var(--pm-black); }
+    .pm-nav-btn {
+      font-family: var(--pm-sans);
+      font-size: 0.82rem; font-weight: 500;
+      padding: 0.42rem 1.1rem;
+      border-radius: var(--pm-radius-pill);
+      border: 0.5px solid var(--pm-gray-200);
+      background: transparent; cursor: pointer;
+      color: var(--pm-black);
+    }
+    .pm-nav-btn:hover { background: var(--pm-gray-100); }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      font-family: var(--pm-sans);
+      font-size: 0.9rem; font-weight: 500;
+      padding: 0.7rem 1.8rem;
+      border-radius: var(--pm-radius-pill);
+      background: var(--pm-black); color: var(--pm-white);
+      border: none; cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { background: var(--pm-gray-800); }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-secondary {
+      font-family: var(--pm-sans);
+      font-size: 0.9rem; font-weight: 500;
+      padding: 0.7rem 1.8rem;
+      border-radius: var(--pm-radius-pill);
+      background: transparent; color: var(--pm-black);
+      border: 0.5px solid var(--pm-gray-400); cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-secondary:hover { background: var(--pm-gray-100); }
+
+    .btn-sm {
+      font-family: var(--pm-sans);
+      font-size: 0.8rem; font-weight: 500;
+      padding: 0.45rem 1.1rem;
+      border-radius: var(--pm-radius-pill);
+      background: var(--pm-black); color: var(--pm-white);
+      border: none; cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-sm:hover { opacity: 0.82; }
+
+    .btn-sm-outline {
+      font-family: var(--pm-sans);
+      font-size: 0.8rem;
+      padding: 0.42rem 1rem;
+      border-radius: var(--pm-radius-pill);
+      background: transparent; color: var(--pm-black);
+      border: 0.5px solid var(--pm-gray-400); cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-sm-outline:hover { background: var(--pm-gray-100); }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      font-size: 0.68rem; font-weight: 600;
+      padding: 0.22rem 0.65rem;
+      border-radius: var(--pm-radius-pill);
+      letter-spacing: 0.06em;
+    }
+    .badge-high { background: var(--pm-green-dim); color: var(--pm-green-text); }
+    .badge-mid  { background: var(--pm-amber-dim); color: var(--pm-amber-text); }
+    .badge-low  { background: var(--pm-red-dim);   color: var(--pm-red-text);  }
+
+    /* ── FORM ELEMENTS ── */
+    .pm-select, .pm-input {
+      font-family: var(--pm-sans);
+      font-size: 0.85rem;
+      padding: 0.52rem 0.9rem;
+      border-radius: var(--pm-radius-sm);
+      border: 0.5px solid var(--pm-gray-200);
+      background: var(--pm-gray-50);
+      color: var(--pm-black);
+      width: 100%;
+    }
+    .pm-select:focus, .pm-input:focus {
+      outline: none;
+      border-color: var(--pm-black);
+      background: var(--pm-white);
+    }
+
+    /* ════════════════════════════════════
+       SCREEN 1 — LANDING
+    ════════════════════════════════════ */
+    #screen-landing {
+      min-height: calc(100vh - 56px);
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 5rem 2rem 4rem;
+      gap: 0;
+    }
+    .landing-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--pm-mono);
+      font-size: 0.71rem; letter-spacing: 0.08em;
+      color: var(--pm-gray-600);
+      border: 0.5px solid var(--pm-gray-200);
+      padding: 0.32rem 0.9rem;
+      border-radius: var(--pm-radius-pill);
+      margin-bottom: 2rem;
+      background: var(--pm-gray-50);
+    }
+    .landing-eyebrow-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--pm-green);
+    }
+    .landing-h1 {
+      font-family: var(--pm-serif);
+      font-size: clamp(2.6rem, 5.5vw, 4rem);
+      font-weight: 400;
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      color: var(--pm-black);
+      margin-bottom: 1.25rem;
+      max-width: 620px;
+    }
+    .landing-h1 em {
+      font-style: italic;
+      color: var(--pm-gray-600);
+    }
+    .landing-sub {
+      font-size: 1rem;
+      color: var(--pm-gray-600);
+      max-width: 400px;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+    .landing-actions {
+      display: flex; gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 3.5rem;
+    }
+    .landing-proof {
+      font-size: 0.76rem;
+      color: var(--pm-gray-400);
+      letter-spacing: 0.04em;
+    }
+    .landing-proof span { margin: 0 0.4rem; }
+
+    /* ════════════════════════════════════
+       SCREEN 2 — UPLOAD
+    ════════════════════════════════════ */
+    #screen-upload {
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 3rem;
+      gap: 1.5rem;
+    }
+    .step-eyebrow {
+      font-family: var(--pm-mono);
+      font-size: 0.68rem; letter-spacing: 0.1em;
+      color: var(--pm-gray-400);
+      text-transform: uppercase;
+    }
+    .step-title {
+      font-family: var(--pm-serif);
+      font-size: 1.75rem; font-weight: 400;
+      letter-spacing: -0.015em;
+      color: var(--pm-black);
+      margin-top: 0.2rem;
+    }
+    .drop-zone {
+      border: 1.5px dashed var(--pm-gray-200);
+      border-radius: var(--pm-radius);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      background: var(--pm-gray-50);
+      cursor: pointer;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 0.7rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .drop-zone:hover { border-color: var(--pm-black); background: var(--pm-white); }
+    .drop-zone.loaded {
+      border-color: var(--pm-green);
+      background: rgba(34,197,94,0.04);
+      border-style: solid;
+    }
+    .drop-icon {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      background: var(--pm-gray-100);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .drop-icon.green { background: var(--pm-green-dim); }
+    .drop-title { font-weight: 500; font-size: 0.9rem; color: var(--pm-black); }
+    .drop-title.green { color: var(--pm-green-text); }
+    .drop-sub { font-size: 0.78rem; color: var(--pm-gray-400); }
+    .divider-or {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-size: 0.76rem; color: var(--pm-gray-400);
+    }
+    .divider-or::before, .divider-or::after {
+      content: ''; flex: 1; height: 0.5px; background: var(--pm-gray-200);
+    }
+    .live-box {
+      border: 0.5px solid var(--pm-gray-200);
+      border-radius: var(--pm-radius);
+      padding: 1.25rem 1.5rem;
+      display: flex; flex-direction: column; gap: 0.75rem;
+      background: var(--pm-white);
+    }
+    .live-box-label {
+      font-size: 0.76rem; font-weight: 500;
+      color: var(--pm-gray-600); letter-spacing: 0.04em;
+    }
+    .input-row { display: flex; gap: 0.6rem; }
+    .upload-footer {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .link-subtle {
+      font-size: 0.79rem; color: var(--pm-gray-600);
+      cursor: pointer; background: none; border: none;
+      font-family: var(--pm-sans);
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+    .link-subtle:hover { color: var(--pm-black); }
+
+    /* ════════════════════════════════════
+       SCREEN 3 — SETTINGS
+    ════════════════════════════════════ */
+    #screen-settings {
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 3rem;
+      gap: 1.25rem;
+    }
+    .settings-card {
+      border: 0.5px solid var(--pm-gray-200);
+      border-radius: var(--pm-radius);
+      padding: 1.5rem;
+      background: var(--pm-white);
+      display: flex; flex-direction: column; gap: 0.9rem;
+    }
+    .card-section-label {
+      font-size: 0.76rem; font-weight: 500;
+      color: var(--pm-gray-600);
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .chip-row { display: flex; gap: 0.45rem; flex-wrap: wrap; }
+    .chip {
+      font-family: var(--pm-mono);
+      font-size: 0.8rem;
+      padding: 0.38rem 0.95rem;
+      border-radius: var(--pm-radius-pill);
+      border: 0.5px solid var(--pm-gray-200);
+      background: var(--pm-gray-50);
+      cursor: pointer; color: var(--pm-gray-600);
+      transition: all 0.15s;
+    }
+    .chip.active { background: var(--pm-black); color: var(--pm-white); border-color: var(--pm-black); }
+    .chip:hover:not(.active) { border-color: var(--pm-gray-400); color: var(--pm-black); }
+
+    .mode-list { display: flex; flex-direction: column; gap: 0.45rem; }
+    .mode-option {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--pm-radius-sm);
+      border: 0.5px solid var(--pm-gray-200);
+      cursor: pointer;
+      background: var(--pm-gray-50);
+      transition: all 0.15s;
+    }
+    .mode-option.active { border-color: var(--pm-black); background: var(--pm-white); }
+    .mode-option:hover:not(.active) { border-color: var(--pm-gray-400); }
+    .mode-radio {
+      width: 15px; height: 15px;
+      border-radius: 50%;
+      border: 1.5px solid var(--pm-gray-400);
+      flex-shrink: 0;
+    }
+    .mode-option.active .mode-radio {
+      border-color: var(--pm-black);
+      background: var(--pm-black);
+      box-shadow: inset 0 0 0 3px var(--pm-white);
+    }
+    .mode-name { font-size: 0.88rem; font-weight: 500; }
+    .mode-desc { font-size: 0.75rem; color: var(--pm-gray-400); margin-top: 0.1rem; }
+
+    .toggle-list { display: flex; flex-direction: column; }
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 0.5px solid var(--pm-gray-200);
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label-text { font-size: 0.88rem; color: var(--pm-black); }
+    .toggle-label-sub { font-size: 0.73rem; color: var(--pm-gray-400); margin-top: 0.15rem; }
+    .toggle {
+      width: 36px; height: 20px;
+      border-radius: var(--pm-radius-pill);
+      background: var(--pm-black);
+      position: relative; cursor: pointer; flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      background: white; border-radius: 50%;
+      top: 3px; right: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle.off { background: var(--pm-gray-200); }
+    .toggle.off::after { transform: translateX(-16px); }
+
+    .settings-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 0.5rem;
+    }
+
+    /* ════════════════════════════════════
+       SCREEN 4 — LOADING
+    ════════════════════════════════════ */
+    #screen-loading {
+      min-height: calc(100vh - 56px);
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .loading-inner {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 1.5rem;
+      text-align: center;
+    }
+    .loading-title {
+      font-family: var(--pm-serif);
+      font-size: 1.65rem; font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+    .loading-subtitle {
+      font-family: var(--pm-mono);
+      font-size: 0.78rem; color: var(--pm-gray-400);
+      letter-spacing: 0.04em;
+      min-height: 1.2em;
+    }
+    .progress-track {
+      width: 300px; height: 2px;
+      background: var(--pm-gray-200);
+      border-radius: 99px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--pm-black);
+      border-radius: 99px; width: 0%;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .step-list { display: flex; flex-direction: column; gap: 0.65rem; text-align: left; }
+    .step-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-size: 0.85rem; color: var(--pm-gray-400);
+      transition: color 0.3s;
+    }
+    .step-item.done { color: var(--pm-black); }
+    .step-item.active { color: var(--pm-gray-800); }
+    .step-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 1.5px solid var(--pm-gray-200);
+      flex-shrink: 0; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 9px; transition: all 0.3s;
+    }
+    .step-item.done .step-dot {
+      background: var(--pm-green); border-color: var(--pm-green); color: white;
+    }
+    .step-item.active .step-dot {
+      border-color: var(--pm-black);
+      animation: pulseRing 1.2s ease infinite;
+    }
+    @keyframes pulseRing {
+      0%   { box-shadow: 0 0 0 0 rgba(10,10,10,0.3); }
+      70%  { box-shadow: 0 0 0 5px rgba(10,10,10,0); }
+      100% { box-shadow: 0 0 0 0 rgba(10,10,10,0); }
+    }
+
+    /* ════════════════════════════════════
+       SCREEN 5 — DASHBOARD
+    ════════════════════════════════════ */
+    #screen-dashboard {
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem 2rem 3rem;
+      gap: 1.5rem;
+    }
+    .dash-head {
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .dash-title {
+      font-family: var(--pm-serif);
+      font-size: 1.45rem; font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+    .dash-meta {
+      font-family: var(--pm-mono);
+      font-size: 0.73rem; color: var(--pm-gray-400);
+      margin-top: 0.25rem;
+    }
+    .dash-actions { display: flex; gap: 0.5rem; align-items: center; }
+
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+    }
+    .stat-card {
+      background: var(--pm-gray-50);
+      border-radius: var(--pm-radius-sm);
+      padding: 1rem 1.2rem;
+    }
+    .stat-label {
+      font-size: 0.7rem; font-weight: 500;
+      color: var(--pm-gray-400); letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .stat-num {
+      font-family: var(--pm-mono);
+      font-size: 1.7rem; font-weight: 500;
+      color: var(--pm-black); margin-top: 0.2rem;
+    }
+    .stat-num.green { color: #16a34a; }
+    .stat-num.red   { color: var(--pm-red); }
+    .stat-sub { font-size: 0.71rem; color: var(--pm-gray-400); margin-top: 0.15rem; }
+
+    .chart-card {
+      border: 0.5px solid var(--pm-gray-200);
+      border-radius: var(--pm-radius);
+      background: var(--pm-white); overflow: hidden;
+    }
+    .chart-card-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem 1.25rem 0;
+    }
+    .chart-card-title { font-size: 0.82rem; font-weight: 500; }
+    .chart-legend {
+      display: flex; gap: 1rem;
+      font-size: 0.72rem; color: var(--pm-gray-400);
+    }
+    .legend-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      display: inline-block; margin-right: 4px;
+    }
+
+    .section-head {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .section-title { font-size: 0.82rem; font-weight: 500; }
+
+    .pattern-list { display: flex; flex-direction: column; gap: 0.45rem; }
+    .pattern-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      border: 0.5px solid var(--pm-gray-200);
+      border-radius: var(--pm-radius-sm);
+      cursor: pointer; background: var(--pm-white);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .pattern-row:hover { border-color: var(--pm-black); background: var(--pm-gray-50); }
+    .p-num {
+      font-family: var(--pm-mono); font-size: 0.72rem;
+      color: var(--pm-gray-400); min-width: 24px;
+    }
+    .p-sparkline { flex: 0 0 60px; height: 26px; }
+    .p-info { flex: 1; }
+    .p-name { font-size: 0.85rem; font-weight: 500; }
+    .p-desc { font-size: 0.73rem; color: var(--pm-gray-400); margin-top: 0.1rem; }
+    .p-arrow { font-size: 0.9rem; color: var(--pm-gray-400); }
+
+    /* ════════════════════════════════════
+       SCREEN 6 — PATTERN DETAIL
+    ════════════════════════════════════ */
+    #screen-detail {
+      max-width: 700px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem 2rem 3rem;
+      gap: 1.25rem;
+    }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      font-size: 0.8rem; color: var(--pm-gray-400);
+      cursor: pointer; background: none; border: none;
+      font-family: var(--pm-sans);
+      width: fit-content;
+    }
+    .back-link:hover { color: var(--pm-black); }
+    .detail-head {
+      display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap;
+    }
+    .detail-tag {
+      font-family: var(--pm-mono); font-size: 0.7rem; letter-spacing: 0.07em;
+      color: var(--pm-gray-400);
+      border: 0.5px solid var(--pm-gray-200);
+      padding: 0.28rem 0.75rem;
+      border-radius: var(--pm-radius-pill);
+    }
+    .detail-title {
+      font-family: var(--pm-serif);
+      font-size: 1.55rem; font-weight: 400;
+      letter-spacing: -0.015em;
+    }
+
+    .insight-block {
+      border-left: 2.5px solid var(--pm-green);
+      border-radius: 0 var(--pm-radius-sm) var(--pm-radius-sm) 0;
+      background: var(--pm-gray-50);
+      padding: 1rem 1.25rem;
+    }
+    .insight-eyebrow {
+      font-family: var(--pm-mono);
+      font-size: 0.66rem; letter-spacing: 0.1em;
+      color: var(--pm-gray-400); text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    .insight-text { font-size: 0.9rem; line-height: 1.6; }
+
+    .detail-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.75rem; }
+    .detail-stat {
+      border: 0.5px solid var(--pm-gray-200);
+      border-radius: var(--pm-radius-sm);
+      padding: 0.9rem 1rem;
+      background: var(--pm-white);
+    }
+    .detail-stat-num {
+      font-family: var(--pm-mono);
+      font-size: 1.45rem; font-weight: 500;
+    }
+    .detail-stat-label { font-size: 0.71rem; color: var(--pm-gray-400); margin-top: 0.2rem; }
+
+    .occurrence-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .occ-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.65rem 0.9rem;
+      border: 0.5px solid var(--pm-gray-200);
+      border-radius: var(--pm-radius-sm);
+      font-size: 0.82rem;
+    }
+    .occ-date {
+      font-family: var(--pm-mono); font-size: 0.76rem;
+      color: var(--pm-gray-400); min-width: 90px;
+    }
+    .occ-label { flex: 1; font-size: 0.8rem; color: var(--pm-gray-600); }
+    .occ-badge {
+      font-size: 0.7rem; font-weight: 600;
+      padding: 0.18rem 0.6rem;
+      border-radius: var(--pm-radius-pill);
+    }
+    .occ-up   { background: var(--pm-green-dim); color: var(--pm-green-text); }
+    .occ-down { background: var(--pm-red-dim);   color: var(--pm-red-text);  }
+
+    .detail-footer { display: flex; gap: 0.65rem; padding-top: 0.25rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .pm-nav { padding: 0 1rem; }
+      #screen-upload, #screen-settings, #screen-dashboard, #screen-detail { padding-left: 1rem; padding-right: 1rem; }
+      .stats-grid, .detail-stats { grid-template-columns: 1fr 1fr; }
+      .landing-h1 { font-size: 2.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════ NAV ══════════════ -->
+  <nav class="pm-nav">
+    <a class="pm-logo" onclick="goTo('screen-landing')">
+      <span class="pm-logo-dot"></span>
+      Pattern Miner
+    </a>
+    <div class="pm-nav-links">
+      <button class="pm-nav-link">Features</button>
+      <button class="pm-nav-link">Docs</button>
+      <button class="pm-nav-btn" onclick="goTo('screen-upload')">Sign in</button>
+    </div>
+  </nav>
+
+  <!-- ══════════════ SCREEN 1: LANDING ══════════════ -->
+  <section id="screen-landing" class="screen active">
+    <div class="landing-eyebrow">
+      <span class="landing-eyebrow-dot"></span>
+      AI &nbsp;·&nbsp; Time Series &nbsp;·&nbsp; Trading
+    </div>
+    <h1 class="landing-h1">Discover <em>hidden patterns</em><br>in financial data</h1>
+    <p class="landing-sub">Intelligent time-series analysis that surfaces what the market is doing — without the technical noise.</p>
+    <div class="landing-actions">
+      <button class="btn-primary" onclick="goTo('screen-upload')">Start Analysis →</button>
+      <button class="btn-secondary" onclick="goTo('screen-dashboard')">View Demo</button>
+    </div>
+    <p class="landing-proof">
+      No setup required
+      <span>·</span>
+      Works with any CSV
+      <span>·</span>
+      Live market data
+    </p>
+  </section>
+
+  <!-- ══════════════ SCREEN 2: UPLOAD ══════════════ -->
+  <section id="screen-upload" class="screen">
+    <p class="step-eyebrow">Step 1 of 3</p>
+    <h2 class="step-title">Upload your data</h2>
+
+    <div class="drop-zone" id="drop-zone" onclick="simulateUpload()">
+      <div class="drop-icon" id="drop-icon">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+        </svg>
+      </div>
+      <p class="drop-title" id="drop-title">Drag &amp; drop CSV here</p>
+      <p class="drop-sub" id="drop-sub">OHLCV format supported &nbsp;·&nbsp; max 50 MB</p>
+      <button class="btn-sm" onclick="event.stopPropagation(); simulateUpload()">Browse file</button>
+    </div>
+
+    <div class="divider-or">or connect live data</div>
+
+    <div class="live-box">
+      <p class="live-box-label">Live market feed</p>
+      <div class="input-row">
+        <select class="pm-select">
+          <option value="">Select Market</option>
+          <option>US Equities</option>
+          <option>Crypto</option>
+          <option>Forex</option>
+          <option>Commodities</option>
+        </select>
+        <input class="pm-input" type="text" placeholder="Ticker symbol (e.g. AAPL)" />
+      </div>
+    </div>
+
+    <div class="upload-footer">
+      <button class="link-subtle">↓ Download example CSV</button>
+      <button class="btn-primary" onclick="goTo('screen-settings')">Continue →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ SCREEN 3: SETTINGS ══════════════ -->
+  <section id="screen-settings" class="screen">
+    <p class="step-eyebrow">Step 2 of 3</p>
+    <h2 class="step-title">Analysis settings</h2>
+
+    <div class="settings-card">
+      <p class="card-section-label">Window size</p>
+      <div class="chip-row" id="chip-group">
+        <div class="chip" onclick="selectChip(this)">10</div>
+        <div class="chip active" onclick="selectChip(this)">20</div>
+        <div class="chip" onclick="selectChip(this)">50</div>
+        <div class="chip" onclick="selectChip(this)">100</div>
+        <div class="chip" onclick="selectChip(this)">Custom</div>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <p class="card-section-label">Mode</p>
+      <div class="mode-list" id="mode-group">
+        <div class="mode-option" onclick="selectMode(this)">
+          <div class="mode-radio"></div>
+          <div>
+            <p class="mode-name">Fast</p>
+            <p class="mode-desc">Quick scan · less compute · good for exploration</p>
+          </div>
+        </div>
+        <div class="mode-option active" onclick="selectMode(this)">
+          <div class="mode-radio"></div>
+          <div>
+            <p class="mode-name">Balanced</p>
+            <p class="mode-desc">Best for most datasets · recommended starting point</p>
+          </div>
+        </div>
+        <div class="mode-option" onclick="selectMode(this)">
+          <div class="mode-radio"></div>
+          <div>
+            <p class="mode-name">Deep analysis</p>
+            <p class="mode-desc">Full scan · higher accuracy · may take a few minutes</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <p class="card-section-label">Pattern detection</p>
+      <div class="toggle-list">
+        <div class="toggle-row">
+          <div>
+            <p class="toggle-label-text">Find repeating patterns</p>
+            <p class="toggle-label-sub">Core pattern recognition</p>
+          </div>
+          <div class="toggle" onclick="toggleSwitch(this)"></div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <p class="toggle-label-text">Allow flexible matches</p>
+            <p class="toggle-label-sub">Catches shape variations of the same pattern</p>
+          </div>
+          <div class="toggle off" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-footer">
+      <button class="btn-sm-outline" onclick="goTo('screen-upload')">← Back</button>
+      <button class="btn-primary" onclick="startLoading()">Run analysis 🚀</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ SCREEN 4: LOADING ══════════════ -->
+  <section id="screen-loading" class="screen">
+    <div class="loading-inner">
+      <p class="loading-title">Analyzing your data...</p>
+      <p class="loading-subtitle" id="loading-sub">Preparing dataset</p>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="step-list">
+        <div class="step-item" id="lstep-0"><div class="step-dot"></div><span>Extracting features</span></div>
+        <div class="step-item" id="lstep-1"><div class="step-dot"></div><span>Finding patterns</span></div>
+        <div class="step-item" id="lstep-2"><div class="step-dot"></div><span>Ranking by significance</span></div>
+        <div class="step-item" id="lstep-3"><div class="step-dot"></div><span>Generating insights</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ SCREEN 5: DASHBOARD ══════════════ -->
+  <section id="screen-dashboard" class="screen">
+    <div class="dash-head">
+      <div>
+        <h2 class="dash-title">Pattern Miner Dashboard</h2>
+        <p class="dash-meta">AAPL &nbsp;·&nbsp; Daily &nbsp;·&nbsp; 180 bars analyzed</p>
+      </div>
+      <div class="dash-actions">
+        <button class="btn-sm-outline">Export</button>
+        <button class="btn-sm" onclick="goTo('screen-upload')">New analysis</button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <p class="stat-label">Patterns found</p>
+        <p class="stat-num">12</p>
+        <p class="stat-sub">across 180 bars</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Strong patterns</p>
+        <p class="stat-num green">5</p>
+        <p class="stat-sub">high confidence</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Weak patterns</p>
+        <p class="stat-num red">7</p>
+        <p class="stat-sub">needs more data</p>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <p class="chart-card-title">Price chart with detected patterns</p>
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:#22c55e"></span>Pattern zone</span>
+          <span><span class="legend-dot" style="background:#ef4444"></span>Weak signal</span>
+        </div>
+      </div>
+      <canvas id="price-chart" style="width:100%;display:block;" height="170"></canvas>
+    </div>
+
+    <div>
+      <div class="section-head" style="margin-bottom:0.75rem">
+        <p class="section-title">Detected patterns</p>
+        <button class="btn-sm-outline">Sort by confidence</button>
+      </div>
+      <div class="pattern-list">
+        <div class="pattern-row" onclick="goTo('screen-detail')">
+          <p class="p-num">#1</p>
+          <svg class="p-sparkline" viewBox="0 0 60 26"><polyline points="0,22 10,18 20,12 30,15 40,6 50,10 60,4" fill="none" stroke="#22c55e" stroke-width="1.5"/></svg>
+          <div class="p-info">
+            <p class="p-name">Rising breakout setup</p>
+            <p class="p-desc">Appears before upward moves · found 15 times</p>
+          </div>
+          <span class="badge badge-high">HIGH</span>
+          <span class="p-arrow">›</span>
+        </div>
+        <div class="pattern-row" onclick="goTo('screen-detail')">
+          <p class="p-num">#2</p>
+          <svg class="p-sparkline" viewBox="0 0 60 26"><polyline points="0,4 10,8 20,12 30,10 40,16 50,14 60,20" fill="none" stroke="#f59e0b" stroke-width="1.5"/></svg>
+          <div class="p-info">
+            <p class="p-name">Gradual distribution</p>
+            <p class="p-desc">Weak sell-off signal · found 9 times</p>
+          </div>
+          <span class="badge badge-mid">MED</span>
+          <span class="p-arrow">›</span>
+        </div>
+        <div class="pattern-row" onclick="goTo('screen-detail')">
+          <p class="p-num">#3</p>
+          <svg class="p-sparkline" viewBox="0 0 60 26"><polyline points="0,14 10,6 20,18 30,8 40,20 50,12 60,16" fill="none" stroke="#ef4444" stroke-width="1.5"/></svg>
+          <div class="p-info">
+            <p class="p-name">Choppy consolidation</p>
+            <p class="p-desc">No clear direction · found 6 times</p>
+          </div>
+          <span class="badge badge-low">LOW</span>
+          <span class="p-arrow">›</span>
+        </div>
+        <div class="pattern-row" onclick="goTo('screen-detail')">
+          <p class="p-num">#4</p>
+          <svg class="p-sparkline" viewBox="0 0 60 26"><polyline points="0,20 10,18 20,22 30,14 40,8 50,5 60,2" fill="none" stroke="#22c55e" stroke-width="1.5"/></svg>
+          <div class="p-info">
+            <p class="p-name">Accumulation base</p>
+            <p class="p-desc">Strong pre-rally signature · found 11 times</p>
+          </div>
+          <span class="badge badge-high">HIGH</span>
+          <span class="p-arrow">›</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ SCREEN 6: DETAIL ══════════════ -->
+  <section id="screen-detail" class="screen">
+    <button class="back-link" onclick="goTo('screen-dashboard')">← Back to dashboard</button>
+
+    <div class="detail-head">
+      <span class="detail-tag">Pattern #1</span>
+      <h2 class="detail-title">Rising breakout setup</h2>
+      <span class="badge badge-high" style="margin-left:auto">HIGH confidence</span>
+    </div>
+
+    <div class="insight-block">
+      <p class="insight-eyebrow">Key insight</p>
+      <p class="insight-text">This pattern frequently appears 3–5 bars before a significant price increase. When this shape forms, prices rose in 80% of past occurrences — making it one of the most reliable signals in your dataset.</p>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <p class="chart-card-title">Pattern shape · overlaid occurrences</p>
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:#22c55e"></span>Canonical</span>
+          <span><span class="legend-dot" style="background:rgba(34,197,94,0.35)"></span>Variants</span>
+        </div>
+      </div>
+      <canvas id="detail-chart" style="width:100%;display:block;" height="150"></canvas>
+    </div>
+
+    <div class="detail-stats">
+      <div class="detail-stat">
+        <p class="detail-stat-num">15</p>
+        <p class="detail-stat-label">Times detected</p>
+      </div>
+      <div class="detail-stat">
+        <p class="detail-stat-num" style="color:#16a34a">80%</p>
+        <p class="detail-stat-label">Price rose after</p>
+      </div>
+      <div class="detail-stat">
+        <p class="detail-stat-num">+4.2%</p>
+        <p class="detail-stat-label">Avg. move size</p>
+      </div>
+    </div>
+
+    <p class="section-title">Recent occurrences</p>
+    <div class="occurrence-list">
+      <div class="occ-row">
+        <span class="occ-date">Mar 14, 2024</span>
+        <span class="occ-label">Pattern held 20 bars</span>
+        <span class="occ-badge occ-up">+5.1%</span>
+      </div>
+      <div class="occ-row">
+        <span class="occ-date">Feb 27, 2024</span>
+        <span class="occ-label">Pattern held 20 bars</span>
+        <span class="occ-badge occ-up">+3.8%</span>
+      </div>
+      <div class="occ-row">
+        <span class="occ-date">Jan 09, 2024</span>
+        <span class="occ-label">Pattern held 20 bars</span>
+        <span class="occ-badge occ-down">−1.2%</span>
+      </div>
+      <div class="occ-row">
+        <span class="occ-date">Dec 18, 2023</span>
+        <span class="occ-label">Pattern held 20 bars</span>
+        <span class="occ-badge occ-up">+6.0%</span>
+      </div>
+      <div class="occ-row">
+        <span class="occ-date">Nov 30, 2023</span>
+        <span class="occ-label">Pattern held 20 bars</span>
+        <span class="occ-badge occ-up">+2.9%</span>
+      </div>
+    </div>
+
+    <div class="detail-footer">
+      <button class="btn-sm">Export pattern data</button>
+      <button class="btn-sm-outline" onclick="goTo('screen-dashboard')">← All patterns</button>
+    </div>
+  </section>
+
+  <script>
+    /* ── NAVIGATION ── */
+    function goTo(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById(id);
+      el.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (id === 'screen-dashboard') requestAnimationFrame(drawPriceChart);
+      if (id === 'screen-detail')    requestAnimationFrame(drawDetailChart);
+    }
+
+    /* ── UPLOAD SIMULATION ── */
+    function simulateUpload() {
+      const zone  = document.getElementById('drop-zone');
+      const icon  = document.getElementById('drop-icon');
+      const title = document.getElementById('drop-title');
+      const sub   = document.getElementById('drop-sub');
+      zone.classList.add('loaded');
+      icon.classList.add('green');
+      icon.innerHTML = `<svg width="20" height="20" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`;
+      title.textContent = 'AAPL_daily.csv loaded';
+      title.classList.add('green');
+      sub.textContent = '180 rows · OHLCV format detected';
+    }
+
+    /* ── SETTINGS INTERACTIONS ── */
+    function selectChip(el) {
+      document.querySelectorAll('#chip-group .chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    }
+    function selectMode(el) {
+      document.querySelectorAll('#mode-group .mode-option').forEach(m => m.classList.remove('active'));
+      el.classList.add('active');
+    }
+    function toggleSwitch(el) { el.classList.toggle('off'); }
+
+    /* ── LOADING ANIMATION ── */
+    function startLoading() {
+      goTo('screen-loading');
+      const fill = document.getElementById('progress-fill');
+      const sub  = document.getElementById('loading-sub');
+      const pcts   = [22, 48, 74, 100];
+      const labels = ['Extracting features...', 'Finding patterns...', 'Ranking by significance...', 'Generating insights...'];
+      let i = 0;
+      function tick() {
+        if (i > 0) {
+          const prev = document.getElementById('lstep-' + (i - 1));
+          prev.classList.remove('active');
+          prev.classList.add('done');
+          prev.querySelector('.step-dot').textContent = '✓';
+        }
+        if (i < 4) {
+          document.getElementById('lstep-' + i).classList.add('active');
+          sub.textContent = labels[i];
+          fill.style.width = pcts[i] + '%';
+          i++;
+          setTimeout(tick, i < 4 ? 950 : 700);
+        } else {
+          document.getElementById('lstep-3').classList.remove('active');
+          document.getElementById('lstep-3').classList.add('done');
+          document.getElementById('lstep-3').querySelector('.step-dot').textContent = '✓';
+          setTimeout(() => goTo('screen-dashboard'), 500);
+        }
+      }
+      setTimeout(tick, 350);
+    }
+
+    /* ── PRICE CHART ── */
+    function drawPriceChart() {
+      const canvas = document.getElementById('price-chart');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const W = canvas.offsetWidth;
+      const H = 170;
+      canvas.width  = W * dpr;
+      canvas.height = H * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      const pad = { t: 18, b: 28, l: 44, r: 16 };
+      const aw = W - pad.l - pad.r;
+      const ah = H - pad.t - pad.b;
+
+      /* generate pseudo price data */
+      const pts = [];
+      let v = 172;
+      for (let i = 0; i < 90; i++) {
+        v += (Math.random() - 0.46) * 2.4;
+        pts.push(v);
+      }
+      const mn = Math.min(...pts) - 1;
+      const mx = Math.max(...pts) + 1;
+      const px = i => pad.l + (i / (pts.length - 1)) * aw;
+      const py = v => pad.t + (1 - (v - mn) / (mx - mn)) * ah;
+
+      /* grid lines */
+      ctx.strokeStyle = '#e4e2db';
+      ctx.lineWidth = 0.5;
+      for (let g = 0; g <= 4; g++) {
+        const yg = pad.t + (g / 4) * ah;
+        ctx.beginPath(); ctx.moveTo(pad.l, yg); ctx.lineTo(pad.l + aw, yg); ctx.stroke();
+        const label = (mx - (g / 4) * (mx - mn)).toFixed(0);
+        ctx.fillStyle = '#a09e97';
+        ctx.font = `10px 'DM Mono', monospace`;
+        ctx.textAlign = 'right';
+        ctx.fillText(label, pad.l - 6, yg + 4);
+      }
+
+      /* pattern highlight zones */
+      const zones = [{ s: 10, e: 18, c: 'rgba(34,197,94,0.1)' }, { s: 38, e: 46, c: 'rgba(34,197,94,0.1)' }, { s: 62, e: 70, c: 'rgba(239,68,68,0.08)' }];
+      zones.forEach(z => {
+        ctx.fillStyle = z.c;
+        ctx.fillRect(px(z.s), pad.t, px(z.e) - px(z.s), ah);
+        ctx.fillStyle = z.c.includes('34,197') ? 'rgba(34,197,94,0.5)' : 'rgba(239,68,68,0.4)';
+        ctx.fillRect(px(z.s), pad.t, 1.5, ah);
+      });
+
+      /* price line */
+      ctx.beginPath();
+      pts.forEach((v, i) => { i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v)); });
+      ctx.strokeStyle = '#0a0a0a';
+      ctx.lineWidth = 1.5;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      /* area fill */
+      ctx.beginPath();
+      pts.forEach((v, i) => { i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v)); });
+      ctx.lineTo(px(pts.length - 1), pad.t + ah);
+      ctx.lineTo(px(0), pad.t + ah);
+      ctx.closePath();
+      const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ah);
+      grad.addColorStop(0, 'rgba(10,10,10,0.06)');
+      grad.addColorStop(1, 'rgba(10,10,10,0)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
+
+    /* ── DETAIL CHART ── */
+    function drawDetailChart() {
+      const canvas = document.getElementById('detail-chart');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const W = canvas.offsetWidth;
+      const H = 150;
+      canvas.width  = W * dpr;
+      canvas.height = H * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      const pad = { t: 16, b: 20, l: 16, r: 16 };
+      const aw = W - pad.l - pad.r;
+      const ah = H - pad.t - pad.b;
+      const base = [20, 18, 14, 13, 8, 10, 5, 4];
+      const mn = 0, mx = 24;
+      const px = i => pad.l + (i / (base.length - 1)) * aw;
+      const py = v => pad.t + (1 - (v - mn) / (mx - mn)) * ah;
+
+      /* variant overlays */
+      const alphas = [0.18, 0.13, 0.09];
+      alphas.forEach(a => {
+        const variant = base.map(v => v + (Math.random() - 0.5) * 5);
+        ctx.beginPath();
+        variant.forEach((v, i) => { i === 0 ? ctx.moveTo(px(i), py(Math.max(0, Math.min(24, v)))) : ctx.lineTo(px(i), py(Math.max(0, Math.min(24, v)))); });
+        ctx.strokeStyle = `rgba(34,197,94,${a})`;
+        ctx.lineWidth = 1.5;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      });
+
+      /* canonical pattern */
+      ctx.beginPath();
+      base.forEach((v, i) => { i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v)); });
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      /* dots on canonical */
+      base.forEach((v, i) => {
+        ctx.beginPath();
+        ctx.arc(px(i), py(v), 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#22c55e';
+        ctx.fill();
+      });
+    }
+
+    /* ── HANDLE RESIZE ── */
+    window.addEventListener('resize', () => {
+      const db = document.getElementById('screen-dashboard');
+      const dt = document.getElementById('screen-detail');
+      if (db.classList.contains('active')) drawPriceChart();
+      if (dt.classList.contains('active')) drawDetailChart();
+    });
+  </script>
+</body>
+</html>
