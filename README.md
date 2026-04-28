@@ -1,1 +1,2 @@
-# Pattern Mining Website
+# PatternX For Pattern Miner Project
+
